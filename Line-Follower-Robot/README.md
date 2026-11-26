@@ -1,17 +1,15 @@
 # Robot dò line ESP32-S3 (Zephyr)
 
-Bản port sang Zephyr RTOS của firmware Arduino
-[FLG-FelixLight/robot](https://github.com/FLG-FelixLight/robot): dò line 5 mắt
+Bản port sang Zephyr RTOS của firmware Arduino trong `../robot/`: dò line 5 mắt
 bằng PID, đi theo mã tuyến, lái tay qua web, tránh vật cản siêu âm, đồng hồ
-TM1637 và phát âm thanh. Trang web, bảng tuyến mặc định và đoạn âm thanh trong
-`assets/` lấy từ project gốc đó (WAV được chuyển từ `welcome.mp3`).
+TM1637 và phát âm thanh.
 
 > **Trạng thái:** đã port đủ chức năng, build sạch, logic đã test trên máy.
 > **Chưa chạy trên board thật.** Làm theo mục "Kiểm tra trên board" trước khi
 > cho xe chạy.
 
 Tài liệu liên quan: `FUNCTIONS.md` (kiến trúc), `PORT_LOG.md` (tiến độ, đối
-chiếu hành vi), `mistakes.md` (lỗi đã gặp).
+chiếu hành vi), `mistakes.md` (lỗi đã gặp), `../robot/prompt.txt` (kế hoạch).
 
 ## Phần cứng
 
@@ -35,13 +33,7 @@ Lưu ý:
 
 ## Build
 
-Cần môi trường Zephyr (đã thử với Zephyr 4.4.99, commit `60dde3fd9b62`, SDK
-1.0.1, có blob WiFi của `hal_espressif`). Thư mục này không có `west.yml`: kích
-hoạt venv của workspace và đặt `ZEPHYR_BASE`:
-
 ```bash
-source <workspace>/.venv/bin/activate
-export ZEPHYR_BASE=<workspace>/zephyr
 cp wifi.conf.example wifi.conf      # điền SSID/mật khẩu mạng 2,4 GHz
 west build -p always -b esp32s3_devkitc/esp32s3/procpu . -- -DEXTRA_CONF_FILE=wifi.conf
 

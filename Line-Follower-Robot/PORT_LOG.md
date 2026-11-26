@@ -1,7 +1,6 @@
 # PORT_LOG — Line Follower Robot: Arduino → Zephyr
 
 Kế hoạch: `../robot/prompt.txt`. Nguồn tham chiếu (chỉ đọc): `../robot/`.
-(`robot/` là project Arduino gốc, không nằm trong repo này.)
 
 ## T0 — Khảo sát (2026-11-26)
 
