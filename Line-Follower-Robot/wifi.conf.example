@@ -1,0 +1,5 @@
+# Chép thành wifi.conf (đã nằm trong .gitignore) rồi điền mạng 2,4 GHz của bạn:
+#   cp wifi.conf.example wifi.conf
+#   west build -p always -b esp32s3_devkitc/esp32s3/procpu . -- -DEXTRA_CONF_FILE=wifi.conf
+CONFIG_APP_WIFI_SSID="ten-wifi"
+CONFIG_APP_WIFI_PSK="mat-khau"

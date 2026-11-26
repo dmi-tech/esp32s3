@@ -1,0 +1,20 @@
+mainmenu "Line follower robot"
+
+config APP_BRINGUP_SHELL
+	bool "Lệnh shell thử cảm biến và motor trên board"
+	depends on SHELL
+	help
+	  Thêm lệnh "robot sensors|motor|stop" để kiểm tra phần cứng.
+	  Chỉ dùng khi thử board, bánh xe phải được kê khỏi mặt đất.
+
+config APP_WIFI_SSID
+	string "SSID WiFi (2,4 GHz)"
+	default ""
+	help
+	  Đặt trong wifi.conf, không đặt trong prj.conf hay mã nguồn.
+
+config APP_WIFI_PSK
+	string "Mật khẩu WiFi (để trống nếu mạng mở)"
+	default ""
+
+source "Kconfig.zephyr"

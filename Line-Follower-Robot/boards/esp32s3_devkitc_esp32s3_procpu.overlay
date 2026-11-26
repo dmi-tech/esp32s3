@@ -1,0 +1,144 @@
+/*
+ * Robot dò line trên ESP32-S3-DevKitC-1 (flash 8 MB, không dùng PSRAM).
+ * Sơ đồ chân giữ nguyên bản Arduino (robot/src/robot_config.h).
+ *
+ *   GPIO1   TM1637 CLK
+ *   GPIO2   TM1637 DIO
+ *   GPIO3   L298N IN4            (strapping: chọn nguồn JTAG)
+ *   GPIO4   cảm biến line S1
+ *   GPIO5   cảm biến line S2
+ *   GPIO6   cảm biến line S3
+ *   GPIO7   cảm biến line S4
+ *   GPIO8   L298N IN3
+ *   GPIO9   MAX98357 LRC  (I2S0 WS)
+ *   GPIO10  MAX98357 BCLK (I2S0 BCK)
+ *   GPIO11  MAX98357 DIN  (I2S0 SD out)
+ *   GPIO12  MAX98357 GAIN        (giữ LOW)
+ *   GPIO13  MAX98357 SD          (HIGH = bật amp)
+ *   GPIO15  cảm biến line S5
+ *   GPIO16  L298N ENA            (PWM, LEDC kênh 0)
+ *   GPIO17  L298N IN1
+ *   GPIO18  L298N IN2
+ *   GPIO43  U0TXD console
+ *   GPIO44  U0RXD console
+ *   GPIO45  HC-SR04 TRIG         (strapping: VDD_SPI)
+ *   GPIO46  L298N ENB            (PWM, LEDC kênh 1; strapping: ROM log)
+ *   GPIO47  HC-SR04 OUT          (cấu hình input, firmware cũ không đọc)
+ *   GPIO48  HC-SR04 ECHO         (DevKitC-1 v1.0: chung chân LED RGB)
+ *
+ * Chân strapping (3, 45, 46): mạch ngoài không được kéo chúng đổi mức lúc
+ * reset. ECHO của HC-SR04 là 5 V: cần chia áp xuống 3,3 V.
+ *
+ * Board DevKitC bật sẵn spi2 trên GPIO10..13, đụng chân amp -> tắt.
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/pwm/pwm.h>
+#include <zephyr/dt-bindings/pinctrl/esp32s3-pinctrl.h>
+
+/* Board include bảng phân vùng 4M; module có 8 MB nên thay bằng bảng 8M. */
+&flash0 {
+	/delete-node/ partitions;
+};
+
+#include <espressif/partitions_0x0_amp_8M.dtsi>
+
+/ {
+	zephyr,user {
+		/* S1..S5, mức HIGH = thấy line (LINE_ON) */
+		sensor-gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>,
+			       <&gpio0 5 GPIO_ACTIVE_HIGH>,
+			       <&gpio0 6 GPIO_ACTIVE_HIGH>,
+			       <&gpio0 7 GPIO_ACTIVE_HIGH>,
+			       <&gpio0 15 GPIO_ACTIVE_HIGH>;
+
+		/* IN1..IN4 */
+		motor-gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>,
+			      <&gpio0 18 GPIO_ACTIVE_HIGH>,
+			      <&gpio0 8 GPIO_ACTIVE_HIGH>,
+			      <&gpio0 3 GPIO_ACTIVE_HIGH>;
+
+		/* ENA, ENB: 1 kHz như analogWrite() mặc định */
+		pwms = <&ledc0 0 PWM_HZ(1000) PWM_POLARITY_NORMAL>,
+		       <&ledc0 1 PWM_HZ(1000) PWM_POLARITY_NORMAL>;
+		pwm-names = "ena", "enb";
+
+		amp-gain-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+		amp-sd-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+
+		sonar-trig-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;  /* GPIO45 */
+		sonar-out-gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;   /* GPIO47 */
+		sonar-echo-gpios = <&gpio1 16 GPIO_ACTIVE_HIGH>;  /* GPIO48 */
+	};
+
+	clock_display: tm1637 {
+		compatible = "titanmec,tm1637";
+		clk-gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>;
+		dio-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+		aux-columns = <4>;
+		status = "okay";
+	};
+};
+
+&pinctrl {
+	robot_ledc_default: robot_ledc_default {
+		group1 {
+			pinmux = <LEDC_CH0_GPIO16>,
+				 <LEDC_CH1_GPIO46>;
+			output-enable;
+		};
+	};
+
+	robot_i2s0_default: robot_i2s0_default {
+		group1 {
+			pinmux = <I2S0_O_WS_GPIO9>,
+				 <I2S0_O_BCK_GPIO10>,
+				 <I2S0_O_SD_GPIO11>;
+		};
+	};
+};
+
+&ledc0 {
+	pinctrl-0 = <&robot_ledc_default>;
+	pinctrl-names = "default";
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	channel0@0 {
+		reg = <0x0>;
+		timer = <0>;
+	};
+
+	channel1@1 {
+		reg = <0x1>;
+		timer = <1>;
+	};
+};
+
+&i2s0 {
+	pinctrl-0 = <&robot_i2s0_default>;
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&dma {
+	status = "okay";
+};
+
+/* Các ngoại vi có pinctrl mặc định đụng chân robot */
+&spi2 {
+	status = "disabled";
+};
+
+&spi3 {
+	status = "disabled";
+};
+
+&i2c0 {
+	status = "disabled";
+};
+
+&i2c1 {
+	status = "disabled";
+};
